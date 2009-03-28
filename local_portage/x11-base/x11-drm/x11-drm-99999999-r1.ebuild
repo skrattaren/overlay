@@ -3,10 +3,12 @@
 
 # Git-ebuild for DRM modules, r6xx/r7xx-branch
 # Based on x11-drm from mainline Portage tree
-# Doesn't use Portage patchsets, could fail because of it
+# Tries to make use of Portage patchsets
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/git/mesa/drm"
 EGIT_BRANCH="r6xx-r7xx-support"
+
+PATCHDATE='20090320'
 
 inherit eutils x11 linux-mod autotools git
 
@@ -31,9 +33,16 @@ IUSE="${IUSE_VIDEO_CARDS} kernel_FreeBSD kernel_linux"
 RESTRICT="strip test"
 
 S="${WORKDIR}/drm"
+PATCHVER="0.1"
+PATCHDIR="${WORKDIR}/patch"
+EXCLUDED="${WORKDIR}/excluded"
 
 DESCRIPTION="DRM Kernel Modules for X11 (r6xx/7xx branchi from git)"
 HOMEPAGE="http://dri.sf.net"
+#SRC_URI="mirror://gentoo/linux-drm-${PV}-kernelsource.tar.bz2"
+if [ -n "${PATCHVER}" ] ; then
+	SRC_URI="${SRC_URI} mirror://gentoo/x11-drm-${PATCHDATE}-gentoo-${PATCHVER}.tar.bz2"
+fi
 
 SLOT="0"
 LICENSE="X11"
@@ -58,12 +67,22 @@ pkg_setup() {
 }
 
 src_unpack() {
-	#unpack linux-drm-${PV}-kernelsource.tar.bz2
 	git_src_unpack
 	cd "${WORKDIR}"
 
-	cd "${S}"
+	# Apply patches if there's a patchball version number provided.
+	if [ -n "${PATCHVER}"  ]
+	then
+		unpack x11-drm-${PATCHDATE}-gentoo-${PATCHVER}.tar.bz2
+		cd "${S}"
+
+		patch_prepare
+
+		# Apply patches
+		EPATCH_SUFFIX="patch" epatch ${PATCHDIR}
+	fi
 	eautoreconf -v --install
+
 	src_unpack_os
 }
 
