@@ -8,8 +8,6 @@
 EGIT_REPO_URI="git://anongit.freedesktop.org/git/mesa/drm"
 EGIT_BRANCH="r6xx-r7xx-support"
 
-PATCHDATE='20090320'
-
 inherit eutils x11 linux-mod autotools git
 
 IUSE_VIDEO_CARDS="
@@ -39,10 +37,6 @@ EXCLUDED="${WORKDIR}/excluded"
 
 DESCRIPTION="DRM Kernel Modules for X11 (r6xx/7xx branchi from git)"
 HOMEPAGE="http://dri.sf.net"
-#SRC_URI="mirror://gentoo/linux-drm-${PV}-kernelsource.tar.bz2"
-if [ -n "${PATCHVER}" ] ; then
-	SRC_URI="${SRC_URI} mirror://gentoo/x11-drm-${PATCHDATE}-gentoo-${PATCHVER}.tar.bz2"
-fi
 
 SLOT="0"
 LICENSE="X11"
@@ -73,13 +67,14 @@ src_unpack() {
 	# Apply patches if there's a patchball version number provided.
 	if [ -n "${PATCHVER}"  ]
 	then
-		unpack x11-drm-${PATCHDATE}-gentoo-${PATCHVER}.tar.bz2
+		mkdir ${PATCHDIR}
+		
 		cd "${S}"
 
-		patch_prepare
-
 		# Apply patches
-		EPATCH_SUFFIX="patch" epatch ${PATCHDIR}
+		EPATCH_SOURCE="${FILESDIR}" EPATCH_SUFFIX="patch" \
+					EPATCH_FORCE="yes" epatch 
+		#epatch "${FILESDIR}/configure.ac.patch"
 	fi
 	eautoreconf -v --install
 
