@@ -1,0 +1,35 @@
+*** drm/tests/dristat.c	2009-03-20 03:24:48.000000000 +0300
+--- drm/tests/dristat.c	2009-03-29 14:51:46.000000000 +0400
+***************
+*** 30,38 ****
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <unistd.h>
+! #include "xf86drm.h"
+! #include "xf86drmRandom.c"
+! #include "xf86drmHash.c"
+  #include "xf86drm.c"
+  
+  #define DRM_VERSION 0x00000001
+--- 30,39 ----
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <unistd.h>
+! #include <xf86drm.h>
+! #include <fcntl.h>
+! #include <string.h>
+! #include <sys/types.h>
+  #include "xf86drm.c"
+  
+  #define DRM_VERSION 0x00000001
+***************
+*** 41,46 ****
+--- 42,49 ----
+  #define DRM_STATS   0x00000008
+  #define DRM_BUSID   0x00000010
+  
++ #define DRM_NODE_RENDER 1
++ 
+  static void getversion(int fd)
+  {
+      drmVersionPtr version;

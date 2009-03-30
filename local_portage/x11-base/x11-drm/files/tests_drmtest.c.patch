@@ -1,0 +1,19 @@
+*** drm/tests/drmtest.c	2009-03-20 03:24:48.000000000 +0300
+--- drm/tests/drmtest.c	2009-03-29 15:20:55.000000000 +0400
+***************
+*** 27,33 ****
+  
+  #include <fcntl.h>
+  #include <sys/stat.h>
+! #include "drmtest.h"
+  
+  /** Open the first DRM device we can find, searching up to 16 device nodes */
+  int drm_open_any(void)
+--- 27,33 ----
+  
+  #include <fcntl.h>
+  #include <sys/stat.h>
+! #include <drmtest.h>
+  
+  /** Open the first DRM device we can find, searching up to 16 device nodes */
+  int drm_open_any(void)

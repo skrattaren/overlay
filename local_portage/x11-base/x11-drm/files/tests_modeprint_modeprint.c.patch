@@ -1,0 +1,21 @@
+*** drm/tests/modeprint/modeprint.c	2009-03-20 03:24:48.000000000 +0300
+--- drm/tests/modeprint/modeprint.c	2009-03-29 15:24:26.000000000 +0400
+***************
+*** 37,44 ****
+  #include <unistd.h>
+  #include <string.h>
+  
+! #include "xf86drm.h"
+! #include "xf86drmMode.h"
+  
+  int connectors;
+  int full_props;
+--- 37,44 ----
+  #include <unistd.h>
+  #include <string.h>
+  
+! #include <xf86drm.h>
+! #include <xf86drmMode.h>
+  
+  int connectors;
+  int full_props;

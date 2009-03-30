@@ -1,0 +1,15 @@
+*** drm/tests/modeprint/Makefile.am	2009-03-20 03:24:48.000000000 +0300
+--- drm/tests/modeprint/Makefile.am	2009-03-29 15:22:35.000000000 +0400
+***************
+*** 8,13 ****
+  
+  modeprint_SOURCES = \
+  	modeprint.c
+! modeprint_LDADD = \
+! 	$(top_builddir)/libdrm/libdrm.la \
+! 	$(top_builddir)/libdrm/intel/libdrm_intel.la
+--- 8,11 ----
+  
+  modeprint_SOURCES = \
+  	modeprint.c
+! modeprint_LDADD = @DRM_LIB@ @DRM_INTEL_LIB@
