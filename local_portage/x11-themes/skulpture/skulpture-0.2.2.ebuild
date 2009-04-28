@@ -10,10 +10,23 @@ to the eyes 3D User interface."
 HOMEPAGE="http://www.kde-look.org/content/show.php?content=59031"
 SRC_URI="http://skulpture.maxiom.de/releases/${P}.tar.bz2"
 
-LICENSE=""
-SLOT="0"
-KEYWORDS="~amd64"
-IUSE=""
+IUSE="debug"
 
-DEPEND="x11-libs/qt:4"
-RDEPEND="${DEPEND}"
+LICENSE="GPL-2"
+SLOT="4"
+KEYWORDS="~amd64 ~x86"
+
+src_install() {
+	kde4-base_src_install
+#	mv "${D}"/usr/share/apps/kwin/skulpture.desktop \
+#			"${D}"/usr/share/apps/kwin/skulpture-${SLOT}.desktop \
+#			|| die "moving desktop file failed"
+}
+
+#LICENSE=""
+#SLOT="0"
+#KEYWORDS="~amd64"
+#IUSE=""
+#
+#DEPEND="x11-libs/qt:4"
+#RDEPEND="${DEPEND}"
