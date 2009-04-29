@@ -14,7 +14,7 @@ SRC_URI="http://cuberok.googlecode.com/files/${PKG_VER}.tar.gz"
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
-IUSE="audiere musepack ogg vorbis alsa oss mad flac aac phonon"
+IUSE="audiere gstreamer musepack ogg vorbis alsa oss mad flac aac phonon"
 
 DEPEND=""
 RDEPEND="x11-libs/qt-core:4
