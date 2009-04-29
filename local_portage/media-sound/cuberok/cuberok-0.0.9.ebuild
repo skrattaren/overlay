@@ -8,35 +8,38 @@ EAPI="2"
 inherit eutils qt4
 PKG_VER=${PN}-${PV}
 
-DESCRIPTION="Cuberok is yet another music player based on Qt4"
+DESCRIPTION="Yet another music player based on Qt4"
 HOMEPAGE="http://cuberok.googlecode.com"
 SRC_URI="http://cuberok.googlecode.com/files/${PKG_VER}.tar.gz"
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
-IUSE="audiere musepack ogg vorbis alsa oss mad flac aac"
+IUSE="audiere musepack ogg vorbis alsa oss mad flac aac phonon"
 
 DEPEND=""
 RDEPEND="x11-libs/qt-core:4
     x11-libs/qt-gui:4
 	media-libs/taglib
-	!audiere? ( media-libs/gstreamer
-	            media-libs/gst-plugins-ugly )
+	gstreamer? ( media-libs/gstreamer 
+				 media-libs/gst-plugins-ugly 
+				 media-plugins/gst-plugins-taglib )
+	gstreamer? (
+				musepack? ( media-plugins/gst-plugins-musepack )
+				vorbis? ( media-plugins/gst-plugins-vorbis )
+				flac? ( media-plugins/gst-plugins-flac )
+				aac? ( media-plugins/gst-plugins-faad )
+				oss? ( media-plugins/gst-plugins-oss )
+				alsa? ( media-plugins/gst-plugins-alsa )
+				mad? ( media-plugins/gst-plugins-mad )
+				ogg? ( media-plugins/gst-plugins-ogg )
+				)
 	audiere? ( media-libs/audiere )
-	media-plugins/gst-plugins-taglib
-	musepack? ( media-plugins/gst-plugins-musepack )
-	vorbis? ( media-plugins/gst-plugins-vorbis )
-	flac? ( media-plugins/gst-plugins-flac )
-	aac? ( media-plugins/gst-plugins-faad )
-	oss? ( media-plugins/gst-plugins-oss )
-	alsa? ( media-plugins/gst-plugins-alsa )
-	mad? ( media-plugins/gst-plugins-mad )
-	ogg? ( media-plugins/gst-plugins-ogg )"
+	phonon?  ( media-sound/phonon )
+"	
 
 src_compile() {
 	lupdate Cuberok.pro -ts locale\cuberok_ru.ts
 	lrelease locale\cuberok_ru.ts -qm locale\cuberok_ru.qm
-#    find . -iname Makefile -exec rm {} \;
 	qmake Cuberok.pro || die "qmake failed!"
 	make || die "Make failed!"
 }
