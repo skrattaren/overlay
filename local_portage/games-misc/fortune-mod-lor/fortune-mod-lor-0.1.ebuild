@@ -6,7 +6,7 @@ EAPI="2"
 DESCRIPTION="Quotes from Linux.Org.Ru"
 HOMEPAGE="http://lorquotes.ru/"
 SRC_URI="http://sisyphus.ru/cgi-bin/srpm.pl/Sisyphus/fortunes-LOR/getsource/0 ->
-fortunes-lor-0.1.tar.bz2"
+fortunes-lor-0.1.bz2"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -17,7 +17,7 @@ IUSE=""
 RDEPEND="games-misc/fortune-mod"
 
 src_install() {
-	mv fortunes-LOR lor
+	mv fortunes-lor-0.1 lor
 	/usr/bin/strfile lor
 	insinto /usr/share/fortune
 	doins lor lor.dat || die
