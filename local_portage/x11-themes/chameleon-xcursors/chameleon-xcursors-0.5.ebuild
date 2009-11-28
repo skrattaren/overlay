@@ -11,10 +11,10 @@ EAPI="2"
 COLOURS="Anthracite DarkSkyBlue SkyBlue Pearl White"
 SRC_URI=""
 for COLOUR in ${COLOURS} ; do
-    SRC_URI="${SRC_URI} http://www.egregorion.net/works/${MY_PN}-${COLOUR}-${PV}.tar.bz2"
+	SRC_URI="${SRC_URI} http://www.egregorion.net/works/${MY_PN}-${COLOUR}-${PV}.tar.bz2"
 done
 
-LICENSE="GPL"
+LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 ppc ppc64 sparc x86"
 IUSE=""
