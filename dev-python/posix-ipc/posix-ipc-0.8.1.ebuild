@@ -17,10 +17,15 @@ RESTRICT="mirror"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 DEPEND=""
 RDEPEND="${DEPEND}"
 
 S=${WORKDIR}/${MY_P}
+
+src_install() {
+	distutils_src_install
+	dohtml *.html
+}
