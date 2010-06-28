@@ -1,12 +1,12 @@
-kde-base/kate:4.4
-kde-base/kde-l10n:4.4
-kde-base/kdebase-data:4.4
-kde-base/kolourpaint:4.4
-kde-base/konsole:4.4
-kde-base/okular:4.4
-kde-base/oxygen-icons:4.4
-kde-misc/kdiff3:1
-kde-misc/krename:4
-kde-misc/krusader:4
+kde-base/kate
+kde-base/kde-l10n
+kde-base/kdebase-data
+kde-base/kolourpaint
+kde-base/konsole
+kde-base/okular
+kde-base/oxygen-icons
+kde-misc/kdiff3
+kde-misc/krename
+kde-misc/krusader
 media-video/loopy
 
