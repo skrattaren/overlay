@@ -1,10 +1,10 @@
 # Copyright 1999-2010 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-admin/conky/conky-1.8.0-r2.ebuild,v 1.3 2010/08/13 19:30:33 billie Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-admin/conky/conky-1.8.1.ebuild,v 1.2 2010/10/06 19:22:14 billie Exp $
 
-EAPI="2"
+EAPI=2
 
-inherit autotools eutils
+inherit eutils
 
 DESCRIPTION="An advanced, highly configurable system monitor for X"
 HOMEPAGE="http://conky.sourceforge.net/"
@@ -13,9 +13,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2"
 LICENSE="GPL-3 BSD LGPL-2.1 MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="apcupsd audacious curl debug eve hddtemp imlib iostats lua lua-cairo
-lua-imlib math moc mpd nano-syntax ncurses nvidia +portmon rss thinkpad truetype
-vim-syntax weather-metar weather-xoap wifi X xdamage xmms2"
+IUSE="apcupsd audacious curl debug eve hddtemp imlib iostats lua lua-cairo lua-imlib math moc mpd nano-syntax ncurses noxdamage nvidia +portmon rss thinkpad truetype vim-syntax weather-metar weather-xoap wifi X xmms2"
 
 DEPEND_COMMON="
 	X? (
@@ -25,7 +23,7 @@ DEPEND_COMMON="
 		nvidia? ( media-video/nvidia-settings )
 		truetype? ( x11-libs/libXft >=media-libs/freetype-2 )
 		x11-libs/libX11
-		xdamage? ( x11-libs/libXdamage )
+		!noxdamage? ( x11-libs/libXdamage )
 		x11-libs/libXext
 		audacious? ( >=media-sound/audacious-1.5 dev-libs/glib )
 		xmms2? ( media-sound/xmms2 )
@@ -55,11 +53,7 @@ DEPEND="
 	"
 
 src_prepare() {
-	epatch "${FILESDIR}/${P}-ncurses.patch" \
-		"${FILESDIR}/${P}-audacious-2.3.patch" \
-		"${FILESDIR}/${P}-if-existing.patch" \
-		"${FILESDIR}/${P}-ibm-x.patch"
-	eautoreconf
+	epatch "${FILESDIR}/conky-1.8.1-nvidia-x.patch"
 }
 
 src_configure() {
@@ -67,6 +61,9 @@ src_configure() {
 
 	if use X; then
 		myconf="--enable-x11 --enable-double-buffer"
+		if use noxdamage; then
+			myconf="${myconf} --disable-xdamage"
+		fi
 		myconf="${myconf} --enable-argb --enable-own-window"
 		myconf="${myconf} $(use_enable imlib imlib2) $(use_enable lua-cairo)"
 		myconf="${myconf} $(use_enable lua-imlib lua-imlib2)"
@@ -80,7 +77,6 @@ src_configure() {
 
 	econf \
 		${myconf} \
-		$(use_enable xdamage) \
 		$(use_enable apcupsd) \
 		$(use_enable curl) \
 		$(use_enable debug) \
@@ -101,22 +97,21 @@ src_configure() {
 }
 
 src_install() {
-	emake DESTDIR="${D}" install || die "make install failed"
-	dodoc ChangeLog AUTHORS TODO || die "dodoc failed"
-	dohtml doc/docs.html doc/config_settings.html doc/variables.html \
-		|| die "dohtml failed"
+	emake DESTDIR="${D}" install || die
+	dodoc ChangeLog AUTHORS TODO || die
+	dohtml doc/docs.html doc/config_settings.html doc/variables.html || die
 
 	if use vim-syntax; then
 		insinto /usr/share/vim/vimfiles/ftdetect
-		doins "${S}"/extras/vim/ftdetect/conkyrc.vim || die "doins failed"
+		doins "${S}"/extras/vim/ftdetect/conkyrc.vim || die
 
 		insinto /usr/share/vim/vimfiles/syntax
-		doins "${S}"/extras/vim/syntax/conkyrc.vim|| die "doins failed"
+		doins "${S}"/extras/vim/syntax/conkyrc.vim || die
 	fi
 
 	if use nano-syntax; then
 		insinto /usr/share/nano/
-		doins "${S}"/extras/nano/conky.nanorc|| die "doins failed"
+		doins "${S}"/extras/nano/conky.nanorc || die
 	fi
 }
 
