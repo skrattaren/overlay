@@ -12,14 +12,14 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2"
 
 LICENSE="GPL-3 BSD LGPL-2.1 MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~alpha ~amd64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="apcupsd audacious curl debug eve hddtemp imlib iostats lua lua-cairo lua-imlib math moc mpd nano-syntax ncurses noxdamage nvidia +portmon rss thinkpad truetype vim-syntax weather-metar weather-xoap wifi X xmms2"
 
 DEPEND_COMMON="
 	X? (
 		imlib? ( media-libs/imlib2 )
-		lua-cairo? ( >=dev-lang/toluapp-1.0.93 x11-libs/cairo[X] )
-		lua-imlib? ( >=dev-lang/toluapp-1.0.93 media-libs/imlib2 )
+		lua-cairo? ( >=dev-lua/toluapp-1.0.93 x11-libs/cairo[X] )
+		lua-imlib? ( >=dev-lua/toluapp-1.0.93 media-libs/imlib2 )
 		nvidia? ( media-video/nvidia-settings )
 		truetype? ( x11-libs/libXft >=media-libs/freetype-2 )
 		x11-libs/libX11
@@ -53,7 +53,10 @@ DEPEND="
 	"
 
 src_prepare() {
-	epatch "${FILESDIR}/conky-1.8.1-nvidia-x.patch"
+	epatch "${FILESDIR}/${P}-nvidia-x.patch"
+	epatch "${FILESDIR}/${P}-xmms2.patch"
+	epatch "${FILESDIR}/${P}-secunia-SA43225.patch"
+	epatch "${FILESDIR}/${P}-acpitemp.patch"
 }
 
 src_configure() {
