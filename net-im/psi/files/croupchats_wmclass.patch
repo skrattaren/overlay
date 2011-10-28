@@ -1,0 +1,50 @@
+diff -uNr psi-0.14_orig/src/tabs/tabdlg.cpp psi-0.14/src/tabs/tabdlg.cpp
+--- psi-0.14_orig/src/tabs/tabdlg.cpp	2009-12-03 03:43:39.000000000 +0600
++++ psi-0.14/src/tabs/tabdlg.cpp	2011-08-22 16:29:32.058629407 +0700
+@@ -155,7 +155,6 @@
+ 
+ 	setAcceptDrops(true);
+ 
+-	X11WM_CLASS("tabs");
+ 	setLooks();
+ 
+ 	act_close_ = new QAction(this);
+@@ -193,6 +192,11 @@
+ 	}
+ }
+ 
++void TabDlg::setX11WmClass(const char * str)
++{
++	X11WM_CLASS(str);
++}
++
+ // FIXME: This is a bad idea to store pointers in QMimeData
+ Q_DECLARE_METATYPE(TabDlg*);
+ Q_DECLARE_METATYPE(TabbableWidget*);
+diff -uNr psi-0.14_orig/src/tabs/tabdlg.h psi-0.14/src/tabs/tabdlg.h
+--- psi-0.14_orig/src/tabs/tabdlg.h	2009-12-03 03:43:39.000000000 +0600
++++ psi-0.14/src/tabs/tabdlg.h	2011-08-22 16:29:55.788657123 +0700
+@@ -83,6 +83,7 @@
+ 	void setUserManagementEnabled(bool enabled); // default enabled
+ 	void setTabBarShownForSingles(bool enabled); // default enabled
+ 	void setSimplifiedCaptionEnabled(bool enabled); // default disabled
++	void setX11WmClass(const char * str);
+ 
+ protected:
+ 	void setShortcuts();
+diff -uNr psi-0.14_orig/src/tabs/tabmanager.cpp psi-0.14/src/tabs/tabmanager.cpp
+--- psi-0.14_orig/src/tabs/tabmanager.cpp	2009-12-03 03:43:39.000000000 +0600
++++ psi-0.14/src/tabs/tabmanager.cpp	2011-08-22 16:30:54.616726219 +0700
+@@ -98,6 +98,12 @@
+ 	tab->setUserManagementEnabled(userManagement_);
+ 	tab->setTabBarShownForSingles(tabSingles_);
+ 	tab->setSimplifiedCaptionEnabled(simplifiedCaption_);
++	if(kind == 'C')
++		tab->setX11WmClass("chat_tabs");
++	else if(kind == 'M')
++		tab->setX11WmClass("groupchat_tabs");
++	else
++		tab->setX11WmClass("unknown");
+ 	tabsetToKinds_.insert(tab, group);
+ 	for (int i=0; i < group.length(); i++) {
+ 		QChar k = group.at(i);
