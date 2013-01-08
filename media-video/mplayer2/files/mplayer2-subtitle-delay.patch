@@ -1,0 +1,262 @@
+commit 88bb839002bc2804b40c353170840c0df1b4f3de
+Author: Uoti Urpala <uau@mplayer2.org>
+Date:   Fri Jan 4 21:41:36 2013 +0200
+
+    subs: fix vf_ass --subdelay, remove sub_step slave command
+    
+    Commit 5639702953 ("subs: always use sub decoder framework for libass
+    rendering") broke --subdelay with vf_ass (it had no effect). Fix.
+    
+    Remove sub_step slave command (was bound to keys 'g'/'y' by default).
+    This command allowed displaying the previous/next subtitle, but was
+    fairly useless as it was implemented by adjusting sub delay by an
+    amount that made the correct subtitle appear. This changed the delay
+    setting permanently, and there was no easy way to change it back to
+    the previous value.
+    
+    Move the sub_delay variable to the option struct.
+
+diff --git a/DOCS/man/en/control.rst b/DOCS/man/en/control.rst
+index 274a090..5e61f41 100644
+--- a/DOCS/man/en/control.rst
++++ b/DOCS/man/en/control.rst
+@@ -115,9 +115,6 @@ v
+ j and J
+     Cycle through the available subtitles.
+ 
+-y and g
+-    Step forward/backward in the subtitle list.
+-
+ F
+     Toggle displaying "forced subtitles".
+ 
+diff --git a/DOCS/tech/slave.txt b/DOCS/tech/slave.txt
+index 9e8826b..a95dfdf 100644
+--- a/DOCS/tech/slave.txt
++++ b/DOCS/tech/slave.txt
+@@ -393,10 +393,6 @@ sub_scale <value> [abs]
+ vobsub_lang
+     This is a stub linked to sub_select for backwards compatibility.
+ 
+-sub_step <value>
+-    Step forward in the subtitle list by <value> steps or backwards if <value>
+-    is negative.
+-
+ sub_visibility [value]
+     Toggle/set subtitle visibility.
+ 
+diff --git a/cfg-mplayer.h b/cfg-mplayer.h
+index 20bf8bd..4d23fca 100644
+--- a/cfg-mplayer.h
++++ b/cfg-mplayer.h
+@@ -602,7 +602,7 @@ const m_option_t common_opts[] = {
+ #ifdef CONFIG_ICONV
+     {"subcp", &sub_cp, CONF_TYPE_STRING, 0, 0, 0, NULL},
+ #endif
+-    {"subdelay", &sub_delay, CONF_TYPE_FLOAT, 0, 0.0, 10.0, NULL},
++    OPT_FLOAT("subdelay", sub_delay, 0),
+     {"subfps", &sub_fps, CONF_TYPE_FLOAT, 0, 0.0, 10.0, NULL},
+     OPT_MAKE_FLAGS("autosub", sub_auto, 0),
+     {"forcedsubsonly", &forced_subs_only, CONF_TYPE_FLAG, 0, 0, 1, NULL},
+diff --git a/command.c b/command.c
+index d1fc463..ae79669 100644
+--- a/command.c
++++ b/command.c
+@@ -1919,7 +1919,7 @@ static int mp_property_sub_delay(m_option_t *prop, int action, void *arg,
+ {
+     if (!mpctx->sh_video)
+         return M_PROPERTY_UNAVAILABLE;
+-    return m_property_delay(prop, action, arg, &sub_delay);
++    return m_property_delay(prop, action, arg, &mpctx->opts.sub_delay);
+ }
+ 
+ /// Alignment of text subtitles (RW)
+@@ -2949,23 +2949,6 @@ void run_command(MPContext *mpctx, mp_cmd_t *cmd)
+         }
+         break;
+ 
+-    case MP_CMD_SUB_STEP:
+-        if (sh_video) {
+-            int movement = cmd->args[0].v.i;
+-            step_sub(mpctx->subdata, mpctx->video_pts, movement);
+-#if 0
+-            // currently not implemented with libass
+-            if (mpctx->osd->ass_track)
+-                sub_delay +=
+-                    ass_step_sub(mpctx->osd->ass_track,
+-                                 (mpctx->video_pts +
+-                                  sub_delay) * 1000 + .5, movement) / 1000.;
+-#endif
+-            set_osd_tmsg(OSD_MSG_SUB_DELAY, 1, osd_duration,
+-                         "Sub delay: %d ms", ROUND(sub_delay * 1000));
+-        }
+-        break;
+-
+     case MP_CMD_SUB_LOG:
+         log_sub(mpctx);
+         break;
+diff --git a/etc/input.conf b/etc/input.conf
+index 7b61344..96ea541 100644
+--- a/etc/input.conf
++++ b/etc/input.conf
+@@ -69,8 +69,6 @@ I osd_show_property_text "${filename}"  # display filename in osd
+ P osd_show_progression
+ z sub_delay -0.1                        # subtract 100 ms delay from subs
+ x sub_delay +0.1                        # add
+-g sub_step -1                           # immediately display next subtitle
+-y sub_step +1                           #                     previous
+ 9 volume -1
+ / volume -1
+ 0 volume 1
+diff --git a/input/input.c b/input/input.c
+index 6d6cd18..d7c260f 100644
+--- a/input/input.c
++++ b/input/input.c
+@@ -121,7 +121,6 @@ static const mp_cmd_t mp_cmds[] = {
+   { MP_CMD_PLAY_ALT_SRC_STEP, "alt_src_step", { ARG_INT } },
+   { MP_CMD_LOOP, "loop", { ARG_INT, OARG_INT(0) } },
+   { MP_CMD_SUB_DELAY, "sub_delay", { ARG_FLOAT, OARG_INT(0) } },
+-  { MP_CMD_SUB_STEP, "sub_step", { ARG_INT, OARG_INT(0) } },
+   { MP_CMD_OSD, "osd", { OARG_INT(-1) } },
+   { MP_CMD_OSD_SHOW_TEXT, "osd_show_text", { ARG_STRING, OARG_INT(-1), OARG_INT(0) } },
+   { MP_CMD_OSD_SHOW_PROPERTY_TEXT, "osd_show_property_text", { ARG_STRING, OARG_INT(-1), OARG_INT(0) } },
+diff --git a/input/input.h b/input/input.h
+index e401b03..11cf2a2 100644
+--- a/input/input.h
++++ b/input/input.h
+@@ -55,7 +55,6 @@ enum mp_command_type {
+     MP_CMD_SUB_VISIBILITY,
+     MP_CMD_GET_TIME_LENGTH,
+     MP_CMD_GET_PERCENT_POS,
+-    MP_CMD_SUB_STEP,
+     MP_CMD_TV_SET_CHANNEL,
+     MP_CMD_EDL_MARK,
+     MP_CMD_SUB_ALIGNMENT,
+diff --git a/libmpcodecs/vf_ass.c b/libmpcodecs/vf_ass.c
+index c56469b..5eecbb2 100644
+--- a/libmpcodecs/vf_ass.c
++++ b/libmpcodecs/vf_ass.c
+@@ -361,7 +361,7 @@ static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts)
+                                          .mb = opts->ass_bottom_margin };
+         osd->normal_scale = vf->priv->aspect_correction;
+         osd->vsfilter_scale = 1;
+-        osd->sub_pts = pts - osd->sub_offset;
++        osd->sub_pts = pts + opts->sub_delay - osd->sub_offset;
+         osd->support_rgba = false;
+         struct sub_bitmaps b;
+         sub_get_bitmaps(osd, &b);
+diff --git a/mplayer.c b/mplayer.c
+index 0f6f6cc..f6e5bd4 100644
+--- a/mplayer.c
++++ b/mplayer.c
+@@ -1908,7 +1908,7 @@ void update_subtitles(struct MPContext *mpctx, double refpts_tl, bool reset)
+     struct sh_video *sh_video = mpctx->sh_video;
+     struct demux_stream *d_sub = mpctx->d_sub;
+     double refpts_s = refpts_tl - mpctx->osd->sub_offset;
+-    double curpts_s = refpts_s + sub_delay;
++    double curpts_s = refpts_s + opts->sub_delay;
+     unsigned char *packet = NULL;
+     int len;
+     struct sh_sub *sh_sub = d_sub->sh;
+@@ -2992,6 +2992,7 @@ void unpause_player(struct MPContext *mpctx)
+ 
+ static int redraw_osd(struct MPContext *mpctx)
+ {
++    struct MPOpts *opts = &mpctx->opts;
+     struct sh_video *sh_video = mpctx->sh_video;
+     struct vf_instance *vf = sh_video->vfilter;
+     if (sh_video->output_flags & VFCAP_OSD_FILTER)
+@@ -3000,7 +3001,7 @@ static int redraw_osd(struct MPContext *mpctx)
+         return -1;
+     mpctx->osd->sub_pts = mpctx->video_pts;
+     if (mpctx->osd->sub_pts != MP_NOPTS_VALUE)
+-        mpctx->osd->sub_pts += sub_delay - mpctx->osd->sub_offset;
++        mpctx->osd->sub_pts += opts->sub_delay - mpctx->osd->sub_offset;
+ 
+     if (!(sh_video->output_flags & VFCAP_EOSD_FILTER))
+         vf->control(vf, VFCTRL_DRAW_EOSD, mpctx->osd);
+@@ -3542,7 +3543,7 @@ static void run_playloop(struct MPContext *mpctx)
+         struct vf_instance *vf = sh_video->vfilter;
+         mpctx->osd->sub_pts = mpctx->video_pts;
+         if (mpctx->osd->sub_pts != MP_NOPTS_VALUE)
+-            mpctx->osd->sub_pts += sub_delay - mpctx->osd->sub_offset;
++            mpctx->osd->sub_pts += opts->sub_delay - mpctx->osd->sub_offset;
+         vf->control(vf, VFCTRL_DRAW_EOSD, mpctx->osd);
+         vf->control(vf, VFCTRL_DRAW_OSD, mpctx->osd);
+         vo_osd_changed(0);
+diff --git a/options.h b/options.h
+index a0aa677..a0e9b39 100644
+--- a/options.h
++++ b/options.h
+@@ -61,6 +61,7 @@ typedef struct MPOpts {
+     int initial_audio_sync;
+     int hr_seek;
+     float hr_seek_demuxer_offset;
++    float sub_delay;
+     int autosync;
+     int softsleep;
+     int rtc;
+diff --git a/sub/find_sub.c b/sub/find_sub.c
+index 97c232b..22643cd 100644
+--- a/sub/find_sub.c
++++ b/sub/find_sub.c
+@@ -37,35 +37,6 @@ static int nosub_range_start=-1;
+ static int nosub_range_end=-1;
+ static const sub_data *last_sub_data = NULL;
+ 
+-void step_sub(sub_data *subd, float pts, int movement) {
+-    subtitle *subs;
+-    int key;
+-
+-    if (subd == NULL) return;
+-    subs = subd->subtitles;
+-    key = (pts+sub_delay) * (subd->sub_uses_time ? 100 : sub_fps);
+-
+-    /* Tell the OSD subsystem that the OSD contents will change soon */
+-    vo_osd_changed(OSDTYPE_SUBTITLE);
+-
+-    /* If we are moving forward, don't count the next (current) subtitle
+-     * if we haven't displayed it yet. Same when moving other direction.
+-     */
+-    if (movement > 0 && key < subs[current_sub].start)
+-    	movement--;
+-    if (movement < 0 && key >= subs[current_sub].end)
+-    	movement++;
+-
+-    /* Never move beyond first or last subtitle. */
+-    if (current_sub+movement < 0)
+-    	movement = 0-current_sub;
+-    if (current_sub+movement >= subd->sub_num)
+-    	movement = subd->sub_num - current_sub - 1;
+-
+-    current_sub += movement;
+-    sub_delay = subs[current_sub].start / (subd->sub_uses_time ? 100 : sub_fps) - pts;
+-}
+-
+ void find_sub(struct MPContext *mpctx, sub_data* subd,int key){
+     subtitle *subs;
+     subtitle *new_sub = NULL;
+diff --git a/sub/sub.h b/sub/sub.h
+index bd0803b..44c945f 100644
+--- a/sub/sub.h
++++ b/sub/sub.h
+@@ -129,7 +129,6 @@ extern int subtitle_autoscale;
+ extern char *font_name;
+ extern char *sub_font_name;
+ extern float font_factor;
+-extern float sub_delay;
+ extern float sub_fps;
+ 
+ extern int sub_justify;
+diff --git a/sub/subreader.h b/sub/subreader.h
+index a6d0831..259cd8b 100644
+--- a/sub/subreader.h
++++ b/sub/subreader.h
+@@ -100,7 +100,6 @@ void dump_sami(sub_data* subd, float fps);
+ void sub_free( sub_data * subd );
+ struct MPContext;
+ void find_sub(struct MPContext *mpctx, sub_data* subd,int key);
+-void step_sub(sub_data *subd, float pts, int movement);
+ void sub_add_text(subtitle *sub, const char *txt, int len, double endpts);
+ int sub_clear_text(subtitle *sub, double pts);
+ 
