@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/vifm/${P}.tar.bz2"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc ~s390 ~x86"
-IUSE="+X +extended-keys +magic +gtk vim-plugin vim-syntax"
+IUSE="+X +extended-keys +magic +gtk +vim vim-syntax"
 
 DEPEND="
 	>=sys-libs/ncurses-5.7-r7
@@ -22,7 +22,7 @@ DEPEND="
 "
 RDEPEND="
 	${DEPEND}
-	vim-plugin? ( >=app-editors/vim-7.3 )
+	vim? ( >=app-editors/vim-7.3 )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )
 "
 
@@ -48,7 +48,7 @@ src_install() {
 			doins "${S}"/data/vim/"${t}"/"${PN}".vim
 		done
 	fi
-	if use vim-plugin; then
+	if use vim; then
 		local t
 		for t in doc plugin; do
 			insinto /usr/share/vim/vimfiles/"${t}"
