@@ -1,6 +1,6 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-im/psi/psi-0.14-r4.ebuild,v 1.7 2011/10/25 16:45:22 pva Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-im/psi/psi-0.14-r4.ebuild,v 1.13 2013/03/05 19:59:54 maksbotan Exp $
 
 EAPI=4
 
@@ -20,7 +20,7 @@ SRC_URI="mirror://sourceforge/${PN}/${MY_P}.tar.bz2
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 ~arm ~hppa ppc ppc64 x86 ~x86-fbsd"
+KEYWORDS="amd64 ~arm hppa ppc ppc64 x86 ~x86-fbsd"
 IUSE="crypt dbus debug doc extras jingle spell ssl xscreensaver webkit"
 RESTRICT="test"
 
@@ -30,17 +30,17 @@ for LNG in ${LANGS}; do
 	#SRC_URI="${SRC_URI} http://psi-im.org/download/lang/psi_${LNG/ur_PK/ur_pk}.qm"
 done
 
-RDEPEND=">=x11-libs/qt-gui-4.4:4[qt3support,dbus?]
-	>=x11-libs/qt-qt3support-4.4:4
+RDEPEND=">=dev-qt/qtgui-4.4:4[qt3support,dbus?]
+	>=dev-qt/qt3support-4.4:4
 	>=app-crypt/qca-2.0.2:2
 	spell? ( >=app-text/enchant-1.3.0 )
 	xscreensaver? ( x11-libs/libXScrnSaver )
-	extras? ( webkit? ( x11-libs/qt-webkit ) )
+	extras? ( webkit? ( dev-qt/qtwebkit:4 ) )
 	app-arch/unzip
 	|| ( >=sys-libs/zlib-1.2.5.1-r2[minizip] <sys-libs/zlib-1.2.5.1-r1 )"
 
 DEPEND="${RDEPEND}
-	extras? ( sys-devel/qconf )
+	sys-devel/qconf
 	doc? ( app-doc/doxygen )"
 
 PDEPEND="crypt? ( app-crypt/qca-gnupg:2 )
@@ -55,6 +55,8 @@ src_prepare() {
 	epatch "${FILESDIR}/psi-0.14-minizip-detection.patch"
 	epatch "${FILESDIR}/psi-0.14-input-validation.patch"
 	epatch "${FILESDIR}/psi-0.14-drop-debug-cflags.patch"
+	sed -i '/#include <errno.h>/a #include <unistd.h>' \
+		iris/src/irisnet/corelib/netinterface_unix.cpp || die 'sed failed'
 	epatch "${FILESDIR}/croupchats_wmclass.patch"
 
 	if use extras; then
@@ -69,7 +71,6 @@ src_prepare() {
 		ewarn "Note: some patches depend on other. So if you disabled some patch"
 		ewarn "and other started to fail to apply, you'll have to disable patches"
 		ewarn "that fail too."
-		ebeep
 
 		EPATCH_EXCLUDE="${MY_EPATCH_EXCLUDE}
 			005-less-includes.diff
@@ -79,7 +80,6 @@ src_prepare() {
 		sed -e 's/\(^#define PROG_CAPS_NODE	\).*/\1"http:\/\/psi-dev.googlecode.com\/caps";/' \
 			-e 's:\(^#define PROG_NAME "Psi\):\1+:' \
 				-i src/applicationinfo.cpp || die
-		qconf || die "Failed to create ./configure."
 	else
 		if use webkit; then
 			ewarn "Webkit support disabled as it is only available in Psi+"
@@ -87,6 +87,7 @@ src_prepare() {
 		fi
 	fi
 
+	qconf || die "Failed to create ./configure."
 	rm -rf third-party/qca || die # We use system libraries.
 }
 
