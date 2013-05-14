@@ -1,0 +1,164 @@
+--- qingy-1.0.0.orig/configure.in
++++ qingy-1.0.0/configure.in
+@@ -11,6 +11,7 @@ AC_PROG_CC
+ AM_PROG_LEX
+ AC_PROG_YACC
+ AM_PATH_LISPDIR
++AC_CONFIG_MACRO_DIR([m4])
+ 
+ # GCC optimizations
+ 	AC_ARG_ENABLE(optimizations, AC_HELP_STRING([--enable-optimizations],
+--- qingy-1.0.0.orig/Makefile.am
++++ qingy-1.0.0/Makefile.am
+@@ -1,5 +1,7 @@
+ SUBDIRS = src media doc
+ 
++ACLOCAL_AMFLAGS = -I m4
++
+ EXTRA_DIST =   \
+ 		AUTHORS    \
+ 		COPYING    \
+--- qingy-1.0.0.orig/media/screensavers/photos/Makefile.am
++++ qingy-1.0.0/media/screensavers/photos/Makefile.am
+@@ -1,23 +1,22 @@
+ screensaverdir     = @SCREENSAVERS_DIR@
+ 
+ if WANT_SCREEN_SAVERS
+-screensaver_PROGRAMS = photos.qss
++screensaver_LTLIBRARIES = photos.la
+ else
+-screensaver_PROGRAMS =
++screensaver_LTLIBRARIES =
+ endif
+ 
+-photos_qss_SOURCES = \
++photos_la_SOURCES = \
+     photos.c         \
+     wildcards.c      \
+     wildcards.h
+ 
+-INCLUDES  = -I../../.. -I../../../src/DirectFB/objects/ -I../../../src/ -I../../../src/libraries/
+-AM_CFLAGS = @DIRECTFB_CFLAGS@ -fpic -shared
++INCLUDES   = -I$(top_srcdir) -I$(top_srcdir)/src/DirectFB/objects/ -I$(top_srcdir)/src/ -I$(top_srcdir)/src/libraries/
++AM_CFLAGS  = @DIRECTFB_CFLAGS@
++AM_LDFLAGS = -module -shared -avoid-version -shrext .qss
+ 
+ if !WANT_STATIC
+-photos_qss_LDADD    = ../../../src/libraries/libqingy.la
+-photos_qss_LDFLAGS  = -rdynamic
++photos_la_LIBADD = ../../../src/libraries/libqingy.la
+ else
+-photos_qss_LDADD    = ../../../src/libraries/libqingy_static.la
+-photos_qss_LDFLAGS  = -static
++photos_la_LIBADD = ../../../src/libraries/libqingy_static.la
+ endif
+--- qingy-1.0.0.orig/media/screensavers/pixel/Makefile.am
++++ qingy-1.0.0/media/screensavers/pixel/Makefile.am
+@@ -1,12 +1,13 @@
+ screensaverdir     = @SCREENSAVERS_DIR@
+ 
+ if WANT_SCREEN_SAVERS
+-screensaver_PROGRAMS   = pixel.qss
++screensaver_LTLIBRARIES = pixel.la
+ else
+-screensaver_PROGRAMS   =
++screensaver_LTLIBRARIES =
+ endif
+ 
+-pixel_qss_SOURCES  = pixel.c
++pixel_la_SOURCES  = pixel.c
+ 
+-INCLUDES  = -I../../.. -I../../../src/DirectFB/objects/
+-AM_CFLAGS = @DIRECTFB_CFLAGS@ -fpic -shared
++INCLUDES   = -I$(top_srcdir) -I$(top_srcdir)/src/DirectFB/objects/
++AM_CFLAGS  = @DIRECTFB_CFLAGS@
++AM_LDFLAGS = -module -shared -avoid-version -shrext .qss
+--- qingy-1.0.0.orig/media/screensavers/running_time/Makefile.am
++++ qingy-1.0.0/media/screensavers/running_time/Makefile.am
+@@ -1,12 +1,13 @@
+ screensaverdir     = @SCREENSAVERS_DIR@
+ 
+ if WANT_SCREEN_SAVERS
+-screensaver_PROGRAMS   = running_time.qss
++screensaver_LTLIBRARIES = running_time.la
+ else
+-screensaver_PROGRAMS    =
++screensaver_LTLIBRARIES =
+ endif
+ 
+-running_time_qss_SOURCES = running_time.c
++running_time_la_SOURCES = running_time.c
+ 
+-INCLUDES  = -I../../.. -I../../../src/DirectFB/objects/
+-AM_CFLAGS = @DIRECTFB_CFLAGS@ -fpic -shared
++INCLUDES   = -I$(top_srcdir) -I$(top_srcdir)/src/DirectFB/objects/
++AM_CFLAGS  = @DIRECTFB_CFLAGS@
++AM_LDFLAGS = -module -shared -avoid-version -shrext .qss
+--- qingy-1.0.0.orig/src/DirectFB/Makefile.am
++++ qingy-1.0.0/src/DirectFB/Makefile.am
+@@ -1,6 +1,6 @@
+ ## Makefile.am for qingy/src/DirectFB
+ 
+-INCLUDES  = -I../.. -Iobjects -I../ -I../libraries
++INCLUDES  = -I$(top_srcdir) -I$(srcdir)/objects -I$(srcdir)/.. -I$(srcdir)/../libraries
+ AM_CFLAGS = @DIRECTFB_CFLAGS@
+ 
+ sbin_PROGRAMS          = qingy-DirectFB
+@@ -17,7 +17,7 @@ qingy_DirectFB_SOURCES =
+ 
+ if !WANT_STATIC
+ qingy_DirectFB_LDADD   = ../libraries/libqingy.la @DIRECTFB_LIBS@
+-qingy_DirectFB_LDFLAGS = -rdynamic
++qingy_DirectFB_LDFLAGS = -export-dynamic
+ else
+ qingy_DirectFB_LDADD   = ../libraries/libqingy_static.la @DIRECTFB_LIBS@
+ qingy_DirectFB_LDFLAGS = -static
+--- qingy-1.0.0.orig/src/libraries/Makefile.am
++++ qingy-1.0.0/src/libraries/Makefile.am
+@@ -1,7 +1,7 @@
+ ## Makefile.am for qingy/src/libraries
+ 
+ AM_YFLAGS     = -d
+-INCLUDES      = -I../.. -I../
++INCLUDES      = -I$(top_srcdir) -I$(top_srcdir)/src
+ BUILT_SOURCES = parse_settings.h
+ 
+ AM_CFLAGS = -DSETTINGS_DIR=\"$(sysconfdir)/qingy\" -DSBINDIR=\"$(sbindir)/\"
+--- qingy-1.0.0.orig/src/Makefile.am
++++ qingy-1.0.0/src/Makefile.am
+@@ -3,11 +3,11 @@
+ DIST_SUBDIRS  = libraries DirectFB
+ SUBDIRS       = libraries
+ 
+-INCLUDES      = -I.. -Ilibraries
++INCLUDES      = -I$(top_srcdir) -I$(srcdir)/libraries
+ 
+ if USE_DIRECTFB
+ SUBDIRS      += DirectFB
+-INCLUDES     += -IDirectFB
++INCLUDES     += -I$(srcdir)/DirectFB
+ endif
+ 
+ sbin_PROGRAMS   = qingy qingy-reset-console
+@@ -21,9 +21,9 @@ qingy_reset_console_SOURCES  =  \
+ 
+ if !WANT_STATIC
+ qingy_LDADD                   = libraries/libqingy.la
+-qingy_LDFLAGS                 = -rdynamic
++qingy_LDFLAGS                 = -export-dynamic
+ qingy_reset_console_LDADD     = libraries/libqingy.la
+-qingy_reset_console_LDFLAGS   = -rdynamic
++qingy_reset_console_LDFLAGS   = -export-dynamic
+ else
+ qingy_LDADD                   = libraries/libqingy_static.la
+ qingy_LDFLAGS                 = -static
+@@ -46,7 +46,7 @@ sbin_PROGRAMS        += qingy-keygen
+ 
+ if !WANT_STATIC
+ qingy_keygen_LDADD    = libraries/libqingy.la
+-qingy_keygen_LDFLAGS  = -rdynamic
++qingy_keygen_LDFLAGS  = -export-dynamic
+ else
+ qingy_keygen_LDADD    = libraries/libqingy_static.la
+ qingy_keygen_LDFLAGS  = -static
+
